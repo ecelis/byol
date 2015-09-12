@@ -1,24 +1,28 @@
 #include <stdio.h>
-
-/* Decalre a buffer for user input of size 2048 */
-static char input[2048];
+#include <stdlib.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 int main(int argc, char** argv)
 {
   /* Print version and Exit information */
-  puts("lezchty Version 0.0.1");
+  puts("Lezchty Version 0.0.1");
+  puts("(C) 2015 Ernesto Celis");
   puts("Press Ctrl+c to Exit\n");
 
   /* In a never ending loop */
   while (1) {
     /* Output our prompt */
-    fputs("lez> ", stdout);
+    char* input = readline("lez> ");
 
-    /* Rad a line of user input of maximum size 2048 */
-    fgets(input, 2048, stdin);
+    /* Add input to history */
+    add_history(input);
 
     /* Echo input back to user */
-    printf("No you're a %s", input);
+    printf("No you're a %s\n", input);
+
+    /* Free retrieved input */
+    free(input);
   }
   return 0;
 }
