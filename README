@@ -1,1 +1,1 @@
-cc -std=c99 -Wall prompt.c -lreadline -lcursesw -o prompt
+cc -std=c99 -Wall parsing.c mpc.c -lreadline -lcursesw -lm -o parsing
