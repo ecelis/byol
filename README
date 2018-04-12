@@ -1,1 +1,87 @@
-cc -std=c99 -Wall parsing.c mpc.c -lreadline -lcursesw -lm -o parsing
+# BYOL
+
+Basic LISP[1] interpreter based on the book Build your own Lisp[2] by Daniel Holden
+
+
+### Build
+
+
+    cc -std=c99 -Wall parsing.c mpc.c -lreadline -lcursesw -lm -o parsing
+
+
+### Run
+
+
+    ./parsing
+
+
+To get the prompt
+
+
+    Lezchty Version 0.0.4
+    (C) 2014 Daniel Holden, 2015 modifications by Ernesto Celis
+    Learn C and Build your own lisp at http://www.buildyourownlisp.com/
+    Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0
+    Press Ctrl+c to Exit
+
+    lez>
+
+
+### Dialect specification
+
+Lezchty grammar is based on a mathematical subset called Polish Notation[3]
+which is a notation for arithmetic where the operator comes before theoperands.
+
+
+    1 + 2 + 6           is  + 1 2 6
+    6 + (2 * 9)         is  + 6 (* 2 9)
+    (10 * 2) / (4 + 2)  is  / (10 * 2) (+ 4 2)
+
+
+We say that _a program is an operator followed by one or more expressions_
+where _an expression is either a number or in parentheses an operator followed
+by one or more expressions_.
+
+TODO expand dialect description.
+
+S-Expressions are implemented as variable size arrays for simplicity, so
+S-expressions in Lezchty aren't defined inductively as either atom or symbol of
+number or two other S-expresions joined (_cons_) togheter. This is a change in
+the roadmap.
+
+Variables are immutable
+
+
+### Examples
+
+
+    (+ 2 3)
+    (list 1 2 3 4)
+    {head (list 1 2 3 4)}
+    (eval {head (list 1 2 3 4)})
+    (eval (head {(+ 1 2) (+ 10 20)}))
+
+
+
+### To-Do
+
+
+  * FIXME Add floating point numbers support.
+  * FIXME Add missing and useful operators such as ^, %, min, max
+  * FIXME Change - operator so that when it receives one argument negates it
+  * Add builtin `cons` that takes a Q-expression and appends it to the front.
+  * Add builtin `len` function that returns the number of elements in a Q-Expression.
+  * Add builtin `init` that returns all Q-Expressions except final one.
+  * Define JSON grammar
+
+
+### References
+
+  * [C reference](http://en.cppreference.com/w/c)
+  * [mpc C Parser combinator library](https://github.com/orangeduck/mpc)
+  * [Polish notation](http://en.wikipedia.org/wiki/Polish_notation)
+  * [Differnce between unin and struct](https://stackoverflow.com/a/346541/1366519)
+  * [S-Expressions](https://en.wikipedia.org/wiki/S-expression)
+
+[1](https://en.wikipedia.org/wiki/Lisp_(programming_language))
+[2](https://github.com/orangeduck/mpc)
