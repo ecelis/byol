@@ -5,6 +5,7 @@
 
 /* Win support */
 #ifdef _WIN32
+#include <string.h>
 
 static char buffer[2048];
 
@@ -206,12 +207,14 @@ void lval_println (lval *v)
 
 lval *lval_eval (lval *v);
 
+/* Return S-Expression transformed to Q-expression (builds a list) */
 lval *builtin_list (lval *a)
 {
 	a->type = LVAL_QEXPR;
 	return a;
 }
 
+/* Return the head(first) element of the list CAR */
 lval *builtin_first (lval *a)
 {
 	LASSERT (a, a->count == 1,
@@ -230,6 +233,7 @@ lval *builtin_first (lval *a)
 	return v;
 }
 
+/* Return the list minus the first element (tail) CDR */
 lval *builtin_rest (lval *a)
 {
 	LASSERT (a, a->count == 1,
@@ -244,6 +248,7 @@ lval *builtin_rest (lval *a)
 	return v;
 }
 
+/* Return a S-Expression from a Q-Expression and evaluates it */
 lval *builtin_eval (lval *a)
 {
 	LASSERT (a, a->count == 1,
@@ -256,6 +261,7 @@ lval *builtin_eval (lval *a)
 	return lval_eval (x);
 }
 
+/* Return a joint Q-Expression from N Q-Expression in input */
 lval *builtin_conj (lval *a)
 {
 	for (int i = 0; i < a->count; i++) {
@@ -265,6 +271,7 @@ lval *builtin_conj (lval *a)
 
 	lval *x = lval_pop (a, 0);
 
+  /* For each cell in y add it to x */
 	while (a->count) {
 		x = lval_conj (x, lval_pop (a, 0));
 	}
@@ -442,14 +449,18 @@ lval *lval_read(mpc_ast_t *t)
 int main(int argc, char** argv)
 {
   /* Create parsers */
+  // TODO define JSON grammar
   mpc_parser_t *Number    = mpc_new("number");
   mpc_parser_t *Symbol    = mpc_new("symbol");
   mpc_parser_t *Sexpr     = mpc_new("sexpr");
-  mpc_parser_t *Qexpr	  = mpc_new("qexpr");
+  mpc_parser_t *Qexpr	    = mpc_new("qexpr");
   mpc_parser_t *Expr      = mpc_new("expr");
   mpc_parser_t *Lezchty   = mpc_new("lezchty");
 
   /* Define language parser */
+  // FIXME Add floating point numbers support.
+  // FIXME Add missing and useful operators such as ^, %, min, max
+  // FIXME Change - operator so that when it receives one argument negates it
   mpca_lang(MPCA_LANG_DEFAULT,
     "                                                           \
       number    :  /-?[0-9]+/ ;                                 \
