@@ -29,11 +29,28 @@ void add_history (char *unused) {}
 #include <readline/history.h>
 #endif
 
+/* Forwarrd declarations */
+// Empty struct typedefs to avoid cyclic types issues
+struct lval;
+struct lenv;
+typedef struct lval lval;
+typedef struct lenv lenv;
+
 /* lval Types */
-enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR, LVAL_QEXPR };
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
+
+/// Implement the forwarded typeddefs
+typedef lval* (*lbuiltin)(lenv*, lval*);
+
+/*  */
+struct lenv {
+  int count;
+  char **syms;
+  lval **vals;
+};
 
 /* lval */
-typedef struct lval {
+struct lval {
 	int type;
 	long num;
 	/* Error and Symbol have string data */
@@ -43,6 +60,49 @@ typedef struct lval {
 	int count;
 	struct lval **cell;
 } lval;
+
+lenv *lenv_new(void)
+{
+  lenv *e = malloc(Single(lenv));
+  e->count = 0;
+  e->syms = NULL;
+  e->vals = NULL;
+  return e;
+}
+
+void lenv_del (lenv *e)
+{
+  for (int i = 0; i < e->count; i++)
+  {
+    free(e->syms[i]);
+    lval_del(e->vals[i]);
+  }
+  free(e->syms);
+  free(e->vals);
+  free(e);
+}
+
+lval *lenv_get(lenv *e, lval *k)
+{
+  /* Iterate over all items of environment */
+  for (int i = 0; i < e->count; i++)
+  {
+    if (strcmp(e->syms[i], k->sym) == 0)
+    {
+      return lval_copy(e->vals[i]);
+    }
+  }
+  /* If not symbol return error */
+  return lval_err("Unbound symbol!");
+}
+
+/* lval fun Type */
+lval *lval_fun(lbuiltin func) {
+  lval *v = malloc(sizeof(lval));
+  v->type = LVAL_FUN;
+  v->fun = func;
+  return v;
+}
 
 /* lval Number Type */
 lval *lval_num (long x)
@@ -111,6 +171,8 @@ void lval_del(lval *v)
 		}
 		free (v->cell);
 		break;
+  case LVAL_FUN:
+    break;
 	}
 	/* Free the memory allocated for the lval struct itself */
 	free (v);
@@ -122,6 +184,37 @@ lval *lval_add (lval *v, lval *x)
 	v->cell = realloc (v->cell, sizeof(lval*) * v->count);
 	v->cell[v->count - 1] = x;
 	return v;
+}
+
+lval *lval_copy (lval *v)
+{
+  lval *x = malloc(sizeof(lval));
+  x->type = v->type;
+
+  switch (v->type) {
+    /* Copy functions and number directly */
+    case LVAL_FUN:
+      x->fun = v->fun;
+      break;
+    case LVAL_NUM:
+      x->num = v->num;
+      break;
+    /*Copy strings using malloc and strcpy */
+    case LVAL_ERR:
+      x->err =malloc(strlen(v->err) + 1);
+      strcpy(x->sym, v->sym);
+      break;
+    case LVAL_SEXPR:
+    case LVAL_QEXPR:
+      x->count = v->count;
+      x->cell = malloc(sizeof(lval*) * x->count);
+      for (int i = 0; i < x->count; i++)
+      {
+        x->cell[i] == lval_copy(v->cell[i]);
+      }
+      break;
+  }
+  return x;
 }
 
 lval *lval_pop (lval *v, int i)
@@ -193,6 +286,9 @@ void lval_print (lval *v)
 	case LVAL_QEXPR:
 		lval_expr_print (v, '{', '}');
 		break;
+  case LVAL_FUN:
+    printf("<function>");
+    break;
 	}
 }
 
@@ -201,6 +297,7 @@ void lval_println (lval *v)
 	lval_print (v);
 	putchar ('\n');
 }
+
 
 #define LASSERT(args, cond, err) \
 	if (!(cond)) { lval_del (args); return lval_err (err); }
@@ -464,10 +561,8 @@ int main(int argc, char** argv)
   mpca_lang(MPCA_LANG_DEFAULT,
     "                                                           \
       number    :  /-?[0-9]+/ ;                                 \
-      symbol	:  \"list\" | \"first\" | \"rest\"		\
-		| \"conj\" | \"eval\" | '+' | '-'		\
-		| '*' | '/' | '%' ;				\
-      sexpr    :  '(' <expr>* ')' ;                                       \
+      symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;            \
+      sexpr    :  '(' <expr>* ')' ;                             \
       qexpr	: '{' <expr>* '}' ;				\
       expr      : <number> | <symbol> | <sexpr> | <qexpr> ;  \
       lezchty   : /^/ <expr>* /$/ ;                        \
@@ -476,7 +571,7 @@ int main(int argc, char** argv)
 
 
   /* Print version and Exit information */
-  puts("Lezchty Version 0.0.4");
+  puts("Lezchty Version 0.0.5");
   puts("(C) 2014 Daniel Holden, 2015 modifications by Ernesto Celis");
   puts("Learn C and Build your own lisp at http://www.buildyourownlisp.com/");
   puts("Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0");
