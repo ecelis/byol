@@ -1,0 +1,68 @@
+# Chapter 3
+
+## Programs
+
+A C program consits of only _function definitions_ and _structure definitions_.
+
+A source file is a list of _functions_ and _types_.
+
+The functions can call each other or themselves.
+
+C programs always starts in the function `main`
+
+## Variables 
+
+	int i = 10;
+
+## Functions
+
+	int add(int x, int y) {
+		int result = x + y;
+		return result;
+	}
+
+	int added = add(2, 2);
+
+## Structure Declarations
+
+Are used to declare new _types_. Structures are several variables bundled
+togheter.
+
+	typedef struct {
+		float x;
+		float y;
+	} point;
+
+	point p;
+	p.x = 0.1;
+	p.y = 10.0;
+
+## Pointers 
+
+## Strings
+
+In C striungs are represented by the pointer type `char*`, under the hood they are stored as a list of character, where the final charater is _null_.
+
+## Conditionals
+
+	if (z > 10 && x < 100) {
+		puts();
+	} else {
+		puts();
+	}
+
+## Loops
+
+### while
+
+	int i = 10;
+	while (i > 0) {
+		puts("Loop iteration");
+		i = i - 1;
+	}
+
+### for
+
+	for (int i = 0; i < 10; i++) {
+		puts("Loop iteration");
+	}
